@@ -1,6 +1,4 @@
-from utils.data_utils import ImageDataset
 import numpy as np
-from models.model import Network
 import argparse
 import os
 import shutil
@@ -89,79 +87,91 @@ def create_parser():
     return parser
 
 
-LOG_FILE = None
-writer = None
-best_loss = np.inf
+class LogWriter:
+    LOG_HEADER = "epoch,time(s),train_loss,test_loss,test_acc(%)\n"
+
+    def __init__(self, path: str, model_name: str = ""):
+        if not path:
+            raise ValueError(f'Folder "{path}" is invalid')
+
+        self.log_folder = path
+        self.log_file = os.path.join(
+            self.log_folder, "log" + (f"_{model_name}" if model_name else "") + ".csv")
+
+        with open(self.log_file, 'w') as f:
+            f.write(LogWriter.LOG_HEADER)
+
+        self.tb_writer = SummaryWriter(os.path.join(
+            self.log_folder, "tensorboard", model_name))
+
+    def log(self, epoch: int, start_time: float, train_loss: float, test_loss: float, test_acc: float):
+        epoch += 1
+        elapsed_time = time() - start_time
+
+        with open(self.log_file, 'a') as f:
+            f.write(f"{epoch},{elapsed_time},{train_loss},{test_loss},{test_acc}")
+
+        print(f"Epoch {epoch} | Time {elapsed_time:.3g} | "
+              f"Train Loss {train_loss:.4g} | Test Loss {test_loss:.3g} | "
+              f"Test Acc {test_acc:.3g}")
+
+        self.tb_writer.add_scalar("Train/Loss", train_loss, epoch)
+        self.tb_writer.add_scalar("Test/Loss", test_loss, epoch)
+        self.tb_writer.add_scalar("Test/Accuracy", test_acc, epoch)
 
 
-def setup_log(log_path: str, model_name: str = ""):
-    if not log_path:
-        raise ValueError("Provide the path to logs folder")
+class CheckpointManager:
+    def __init__(self, path: str, model_name: str = ""):
+        if not path:
+            raise ValueError(f'Folder "{path}" is invalid')
 
-    global LOG_FILE, writer
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-    LOG_FILE = os.path.join(
-        log_path, "log" + (f"_{model_name}" if model_name else "") + ".csv")
-    with open(LOG_FILE, 'w') as f:
-        f.write('epoch,time(s),train_loss,test_loss,test_acc(%)\n')
+        if not os.path.isdir(path):
+            raise FileExistsError(f'{path} is not a dir')
 
-    writer = SummaryWriter(os.path.join(log_path, "tensorboard", model_name))
+        self.save_folder = path
+        self.best_loss = np.inf
+        self.model_name = model_name
 
+    def save(self, model, optimizer, epoch: int, test_loss: float):
+        is_best = test_loss < self.best_loss
+        self.best_loss = min(self.best_loss, test_loss)
 
-def log(epoch: int, start_time: float, train_loss: float, test_loss: float, test_acc: float):
-    epoch += 1
-    elapsed_time = time() - start_time
+        checkpoint = {
+            "epoch": epoch,
+            "model": model.state_dict(),
+            "test_loss": test_loss,
+            "optimizer": optimizer.state_dict(),
+        }
 
-    if not os.path.exists(LOG_FILE) or not os.path.isfile(LOG_FILE):
-        raise FileNotFoundError(f"Log file '{LOG_FILE}' doesn't exist"
-                                "Invoke setup_log() before using log()!")
+        save_path = os.path.join(
+            self.save_folder, f"{self.model_name}_checkpoint.pth.tar")
+        torch.save(checkpoint, save_path)
 
-    with open(LOG_FILE, "a") as f:
-        f.write(f"{epoch},{elapsed_time},{train_loss},{test_loss},{test_acc}")
+        if is_best:
+            best_path = os.path.join(
+                self.save_folder, f"{self.model_name}_best.pth.tar")
+            shutil.copyfile(save_path, best_path)
 
-    print(f"Epoch {epoch} | Time {elapsed_time:.3g} | "
-          f"Train Loss {train_loss:.4g} | Test Loss {test_loss:.3g} | Test Acc {test_acc:.3g}")
+    def load(self, model, optimizer, best=True):
+        """
+            best: Load best model if True, otherwise - last checkpoint
+        """
 
-    if not writer:
-        raise ValueError("Tensorboard summary writer is not initialized."
-                         "Invoke setup_log() before using log()!")
+        postfix = "best" if best else "checkpoint"
+        save_fle = os.path.join(self.save_folder,
+                                f"{self.model_name}_{postfix}.pth.tar")
 
-    writer.add_scalar("Train/Loss", train_loss, epoch)
-    writer.add_scalar("Test/Loss", test_loss, epoch)
-    writer.add_scalar("Test/Accuracy", test_acc, epoch)
+        if not os.path.isfile(save_fle):
+            raise FileNotFoundError(f'Checkpoint "{save_fle}" does not exist')
 
+        checkpoint = torch.load(save_fle)
 
-SAVE_PATH = None
+        self.best_loss = checkpoint["test_loss"]
+        model.load_state_dict(checkpoint["model"])
+        if optimizer:  # In the inference no optimizer is required
+            optimizer.load_state_dict(checkpoint["optimizer"])
 
-
-def setup_checkpoint(save_path: str):
-    if not save_path:
-        raise ValueError("Provide the path to checkpoint save folder")
-    global SAVE_PATH
-    SAVE_PATH = save_path
-
-    if not os.path.exists(SAVE_PATH):
-        os.makedirs(SAVE_PATH)
-
-    if not os.path.isdir(SAVE_PATH):
-        raise FileExistsError(f'{SAVE_PATH} is not a dir')
-
-
-def checkpoint(net, optimizer, epoch: int, test_loss: float, model_name: str = "model"):
-    global best_loss
-    is_best = test_loss < best_loss
-    best_loss = min(best_loss, test_loss)
-
-    checkpoint = {
-        "epoch": epoch,
-        "network": net.state_dict(),
-        "test_loss": test_loss,
-        "optimizer": optimizer.state_dict(),
-    }
-
-    save_path = os.path.join(SAVE_PATH, f"{model_name}_checkpoint.pth.tar")
-    torch.save(checkpoint, save_path)
-
-    if is_best:
-        best_path = os.path.join(SAVE_PATH, f"{model_name}_best.pth.tar")
-        shutil.copyfile(save_path, best_path)
+        return model, optimizer, checkpoint["epoch"] + 1

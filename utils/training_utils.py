@@ -51,7 +51,7 @@ class TrainingCenter:
             test_loss, test_acc = self._test_epoch(test_loader)
 
             if self.lr_scheduler:
-                self.lr_scheduler.step()
+                self.lr_scheduler.step(test_loss)
 
             self.checkpoint_manager.save(
                 self.model, self.optimizer, epoch, test_loss)

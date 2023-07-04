@@ -38,6 +38,21 @@ class TrainingCenter:
             print(f"Model restored from epoch {self.start_epoch}. "
                   f"Loss: {self.checkpoint_manager.best_loss:.3f}")
 
+    def inference(self, path_to_image: str):
+        image = ImageDataset.preprocess_image(path_to_image)
+        features = ImageDataset.extract_from_mask(
+            image, np.ones(image.shape[:2], dtype=bool))
+
+        if self.model.convex:
+            features = features[:, :2]
+
+        self.model.eval()
+        with torch.no_grad():
+            output = self.model(torch.tensor(features)).detach().numpy()
+            predictions = np.reshape(output, image.shape[:2])
+
+        return image, predictions
+
     def train(self, epochs: int, train_loader: DataLoader, test_loader: DataLoader):
         self.model.to(self.device)
 
@@ -60,21 +75,6 @@ class TrainingCenter:
 
         print(f"The training is finished successfully! "
               f"The model is saved to {self.checkpoint_manager.save_folder}")
-
-    def inference(self, path_to_image: str):
-        image = ImageDataset.preprocess_image(path_to_image)
-        features = ImageDataset.extract_from_mask(
-            image, np.ones(image.shape[:2], dtype=bool))
-
-        if self.model.convex:
-            features = features[:, :2]
-
-        self.model.eval()
-        with torch.no_grad():
-            output = self.model(torch.tensor(features)).detach().numpy()
-            predictions = np.reshape(output, image.shape[:2])
-
-        return image, predictions
 
     def _train_epoch(self, data_loader: DataLoader) -> float:
         self.model.train()

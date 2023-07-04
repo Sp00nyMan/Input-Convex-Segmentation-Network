@@ -8,14 +8,17 @@ class ImageDataset(Dataset):
     def __init__(self, image_original: str | np.ndarray,
                  image_fore: str | np.ndarray,
                  image_back: str | np.ndarray,
-                 eps: float = 3e-8,
+                 eps: float = 3e-8, train: bool = True,
                  ignore_rgb=False) -> None:
         image_original = ImageDataset.preprocess_image(image_original)
-        image_fore = ImageDataset.preprocess_image(image_fore)
-        image_back = ImageDataset.preprocess_image(image_back)
+        if train:
+            image_fore = ImageDataset.preprocess_image(image_fore)
+            image_back = ImageDataset.preprocess_image(image_back)
 
-        self.mask_fore = image_fore.mean(axis=-1) >= 1 - eps
-        self.mask_back = image_back.mean(axis=-1) >= 1 - eps
+            self.mask_fore = image_fore.mean(axis=-1) >= 1 - eps
+            self.mask_back = image_back.mean(axis=-1) >= 1 - eps
+        else:
+            self.mask_fore = self.mask_back = np.ones(image_original.shape[:2])
 
         foreground_features = ImageDataset.extract_from_mask(
             image_original, self.mask_fore, ignore_rgb)

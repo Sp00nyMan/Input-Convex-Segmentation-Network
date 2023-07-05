@@ -80,4 +80,6 @@ if __name__ == "__main__":
 
     tc = TrainingCenter(model, optimizer, scheduler, model_name=args.model,
                         resume_mode=args.resume, device=device)
+    print(f"Starting the training: model='{args.model}'; "
+          f"epochs={args.epochs}; device={device}")
     tc.train(args.epochs, train_loader, test_loader)

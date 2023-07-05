@@ -18,9 +18,6 @@ from tqdm import tqdm
 class TrainingCenter:
     def __init__(self, model: Network | RealNVP | str, optimizer: Optimizer, lr_scheduler: _LRScheduler = None,
                  snapshots_folder: str = r".snapshots", model_name: str = "", resume_mode: str = None, device: str = "cpu"):
-
-        assert resume_mode in (None, "best", "checkpoint")
-
         self.checkpoint_manager = CheckpointManager(
             snapshots_folder, model_name)
         self.log_writer = LogWriter(snapshots_folder, model_name)

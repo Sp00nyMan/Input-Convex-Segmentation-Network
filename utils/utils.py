@@ -10,30 +10,31 @@ import torch
 def create_parser():
     parser = argparse.ArgumentParser(description="Trains a simple FC-network on a toy dataset",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # parser.add_argument(
-    #     "--image",
-    #     "-i",
-    #     required=True,
-    #     type=str,
-    #     help="Path to the original image file.")
-    # parser.add_argument(
-    #     "--image-masked-fore",
-    #     "-imf",
-    #     required=True,
-    #     type=str,
-    #     help="Path to the image file with foreground scribbles.")
-    # parser.add_argument(
-    #     "--image-masked-back",
-    #     "-imb",
-    #     required=True,
-    #     type=str,
-    #     help="Path to the image file with background scribbles.")
+    parser.add_argument(
+        "--model",
+        "-m",
+        type=str,
+        default="plain",
+        choices=["plain", "convex", "flow"]
+    )
+    parser.add_argument(
+        "--image-name",
+        "-i",
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "--image-folder",
+        "-d",
+        type=str,
+        default=r".data"
+    )
     # TRAINING PARAMETERS
     parser.add_argument(
         "--epochs",
         "-e",
         type=int,
-        default=15,
+        default=50,
         help="Number of training epochs.")
     parser.add_argument(
         "--batch-size",
@@ -51,39 +52,28 @@ def create_parser():
         "--learning-rate",
         "-lr",
         type=float,
-        default=0.01,
+        default=1e-3,
         help="Initial learning rate")
     parser.add_argument(
         "--decay",
         "-wd",
         type=float,
-        default=0.0005,
+        default=5e-4,
         help="Weight decay (L2 penalty).")
     # CHECKPOINT OPTIONS
     parser.add_argument(
         "--save",
         "-s",
         type=str,
-        default=".snapshots",
+        default=r".snapshots",
         help="Folder to save checkpoints.")
     parser.add_argument(
         "--resume",
         "-r",
         type=str,
-        default="",
+        default=None,
+        choices=[None, "best", "checkpoint"],
         help="Checkpoint path for resume/test.")
-
-    parser.add_argument(
-        "--print-freq",
-        type=int,
-        default=50,
-        help="Training loss print frequency (batches).")
-    # ACCELERATION
-    parser.add_argument(
-        "--num-workers",
-        type=int,
-        default=4,
-        help="Number of pre-fetching threads.")
     return parser
 
 

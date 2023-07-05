@@ -20,7 +20,7 @@ class CouplingLayer(nn.Module):
         reverse_mask (bool): Whether to reverse the mask. Useful for alternating masks.
     """
 
-    def __init__(self, in_channels, mid_channels, reverse_mask):
+    def __init__(self, in_channels, mid_channels, reverse_mask, device):
         super(CouplingLayer, self).__init__()
 
         # Save mask info
@@ -36,6 +36,9 @@ class CouplingLayer(nn.Module):
 
         # Learnable scale for s
         self.rescale = nn.utils.weight_norm(Rescale(in_channels//2))
+
+        self.st.to(device)
+        self.rescale.to(device)
 
     def forward(self, x):
         x_change, x_id = x[:, ::2], x[:, 1::2]

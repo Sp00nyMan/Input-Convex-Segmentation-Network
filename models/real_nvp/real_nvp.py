@@ -21,10 +21,10 @@ class RealNVP(nn.Module):
         `Coupling` layers.
     """
 
-    def __init__(self, in_channels=2, mid_channels=32):
+    def __init__(self, in_channels=2, mid_channels=32, device='cpu'):
         super(RealNVP, self).__init__()
 
-        self.flows = _RealNVP(in_channels, mid_channels)
+        self.flows = _RealNVP(in_channels, mid_channels, device)
 
     def forward(self, x):
         # Expect inputs in [0, 1]
@@ -57,11 +57,12 @@ class _RealNVP(nn.Module):
             `Coupling` layers.
     """
 
-    def __init__(self, in_channels, mid_channels):
+    def __init__(self, in_channels, mid_channels, device):
         super(_RealNVP, self).__init__()
 
         self.in_couplings = nn.ModuleList([
-            CouplingLayer(in_channels, mid_channels, reverse_mask=i % 2) for i in range(5)
+            CouplingLayer(in_channels, mid_channels,
+                          reverse_mask=i % 2, device=device) for i in range(5)
         ])
 
     def forward(self, x):

@@ -27,17 +27,17 @@ class CouplingLayer(nn.Module):
         self.reverse_mask = reverse_mask
 
         # Build scale and translate network
-        self.st = nn.Sequential(nn.Linear(in_channels//2, mid_channels, dtype=float),
+        self.st = nn.Sequential(nn.Linear(in_channels//2, mid_channels,
+                                          dtype=float, device=device),
                                 nn.LeakyReLU(),
-                                nn.Linear(mid_channels,
-                                          mid_channels, dtype=float),
+                                nn.Linear(mid_channels, mid_channels,
+                                          dtype=float, device=device),
                                 nn.LeakyReLU(),
-                                nn.Linear(mid_channels, 2, dtype=float))
+                                nn.Linear(mid_channels, 2,
+                                          dtype=float, device=device))
 
         # Learnable scale for s
         self.rescale = nn.utils.weight_norm(Rescale(in_channels//2))
-
-        self.st.to(device)
         self.rescale.to(device)
 
     def forward(self, x):

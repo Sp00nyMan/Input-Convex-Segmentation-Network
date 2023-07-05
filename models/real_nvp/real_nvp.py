@@ -61,7 +61,7 @@ class _RealNVP(nn.Module):
         super(_RealNVP, self).__init__()
 
         self.in_couplings = nn.ModuleList([
-            CouplingLayer(in_channels, mid_channels, reverse_mask=i % 2) for i in range(2)
+            CouplingLayer(in_channels, mid_channels, reverse_mask=i % 2) for i in range(5)
         ])
 
     def forward(self, x):

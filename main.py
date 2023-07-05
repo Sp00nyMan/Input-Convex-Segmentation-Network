@@ -45,6 +45,11 @@ if __name__ == "__main__":
     background = os.path.join(args.image_folder,
                               args.image_name + "_back" + ".png")
 
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+    device = torch.device(device)
+
     if args.model == "flow":
         model = RealNVP(2, 32)
     elif args.model == "convex":
@@ -74,5 +79,5 @@ if __name__ == "__main__":
                                                    args.batch_size, args.test_batch_size)
 
     tc = TrainingCenter(model, optimizer, scheduler, model_name=args.model,
-                        resume_mode=args.resume)
+                        resume_mode=args.resume, device=device)
     tc.train(args.epochs, train_loader, test_loader)

@@ -42,6 +42,10 @@ class TrainingCenter:
 
         if self.model.convex:
             features = features[:, :2]
+            network = RealNVP(in_channels=2, mid_channels=32)
+            tc = TrainingCenter(network, None,
+                                self.checkpoint_manager.save_folder, model_name="real_nvp", resume_mode="best")
+            features = tc.model(torch.tensor(features))[0].detach().numpy()
 
         self.model.eval()
         with torch.no_grad():
@@ -80,6 +84,7 @@ class TrainingCenter:
         with tqdm(total=len(data_loader.dataset)) as progress:
             for inputs, targets in data_loader:
                 inputs.to(self.device)
+                targets.to(self.device)
                 self.optimizer.zero_grad()
 
                 loss = self._train_step(inputs, targets)

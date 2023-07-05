@@ -29,6 +29,9 @@ class CouplingLayer(nn.Module):
         # Build scale and translate network
         self.st = nn.Sequential(nn.Linear(in_channels//2, mid_channels, dtype=float),
                                 nn.LeakyReLU(),
+                                nn.Linear(mid_channels,
+                                          mid_channels, dtype=float),
+                                nn.LeakyReLU(),
                                 nn.Linear(mid_channels, 2, dtype=float))
 
         # Learnable scale for s

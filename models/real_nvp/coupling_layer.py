@@ -39,6 +39,7 @@ class CouplingLayer(nn.Module):
         # Learnable scale for s
         self.rescale = nn.utils.weight_norm(Rescale(in_channels//2))
         self.rescale.to(device)
+        self.st.to(device)
 
     def forward(self, x):
         x_change, x_id = x[:, ::2], x[:, 1::2]

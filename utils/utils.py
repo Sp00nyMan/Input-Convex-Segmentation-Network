@@ -27,7 +27,7 @@ def create_parser():
         "--image-folder",
         "-d",
         type=str,
-        default=r".data"
+        default=r"data"
     )
     # TRAINING PARAMETERS
     parser.add_argument(

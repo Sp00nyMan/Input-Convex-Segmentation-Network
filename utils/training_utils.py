@@ -44,7 +44,7 @@ class TrainingCenter:
             features = features[:, :2]
             network = RealNVP(in_channels=2, mid_channels=32)
             tc = TrainingCenter(network, None,
-                                self.checkpoint_manager.save_folder, model_name="real_nvp", resume_mode="best")
+                                self.checkpoint_manager.save_folder, model_name="flow", resume_mode="best")
             features = tc.model(torch.tensor(features))[0].detach().numpy()
 
         self.model.eval()

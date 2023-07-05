@@ -133,6 +133,7 @@ class TrainingCenter:
         with torch.no_grad():
             for inputs, targets in data_loader:
                 inputs.to(self.device)
+                targets.to(self.device)
                 loss, correct = self._test_step(inputs, targets)
 
                 losses.append(loss)

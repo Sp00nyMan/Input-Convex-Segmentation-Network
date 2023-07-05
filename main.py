@@ -46,8 +46,8 @@ if __name__ == "__main__":
                               args.image_name + "_back" + ".png")
 
     device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda:0"
+    # if torch.cuda.is_available():
+    #     device = "cuda:0"
     device = torch.device(device)
 
     if args.model == "flow":
@@ -78,6 +78,8 @@ if __name__ == "__main__":
     train_loader, test_loader = create_dataloaders(data,
                                                    args.batch_size, args.test_batch_size)
 
+    print(f'Started training: model="{args.model}; '
+          f'epochs={args.epochs}; device="{device}"')
     tc = TrainingCenter(model, optimizer, scheduler, model_name=args.model,
                         resume_mode=args.resume, device=device)
     tc.train(args.epochs, train_loader, test_loader)

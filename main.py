@@ -51,7 +51,7 @@ if __name__ == "__main__":
     device = torch.device(device)
 
     if args.model == "flow":
-        model = RealNVP(2, 32, device)
+        model = RealNVP(2, 32)
     elif args.model == "convex":
         model = Network(2, 1, convex=True)
     else:

@@ -64,7 +64,8 @@ if __name__ == "__main__":
         data = prepare_dataset_for_convex(original)
     else:
         data = ImageDataset(original, foreground, background,
-                            ignore_rgb=True, train=(args.resume != "best"))
+                            ignore_rgb=(args.model == "flow"),
+                            train=(args.resume != "best"))
 
     scheduler = ReduceLROnPlateau(optimizer, "min", threshold=1e-2,
                                   verbose=True, patience=5)

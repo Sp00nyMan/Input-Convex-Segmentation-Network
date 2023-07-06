@@ -16,7 +16,7 @@ class Network(nn.Module):
         self.fc3 = nn.Linear(self.fc2.out_features, out_features)
 
         self.W1y = nn.Linear(in_features, self.fc2.out_features, False)
-        self.W2y = nn.Linear(in_features, self.fc3.out_features, False)
+        self.W2y = nn.Linear(in_features, out_features, False)
 
         self.double()
 
